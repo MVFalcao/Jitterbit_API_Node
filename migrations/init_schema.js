@@ -7,8 +7,7 @@ exports.up = async function up(knex) {
     table.string("role").notNullable().defaultTo("user");
     table.timestamps(true, true);
   });
-
-  exports.down = async function down(knex) {
-
+};
+exports.down = async function down(knex) {
   await knex.schema.dropTableIfExists("users");
 };
