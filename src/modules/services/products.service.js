@@ -62,15 +62,6 @@ function validateUpdatePayload(payload) {
   }
 }
 
-async function getScopedItemsQuery(executor = db) {
-  const query = executor("items");
-  if (await hasItemsOrderIdColumn(executor)) {
-    query.where("order_id", 0);
-  }
-
-  return query;
-}
-
 async function getByIdOrFail(id, executor = db) {
   const query = executor("items").where({ product_id: id });
   if (await hasItemsOrderIdColumn(executor)) {
@@ -100,7 +91,10 @@ function getInsertedId(insertResult) {
 }
 
 async function listProducts() {
-  const query = await getScopedItemsQuery();
+  const query = db("items");
+  if (await hasItemsOrderIdColumn()) {
+    query.where("order_id", 0);
+  }
   const products = await query.select("*").orderBy("product_id", "asc");
   return products.map(sanitizeProduct);
 }

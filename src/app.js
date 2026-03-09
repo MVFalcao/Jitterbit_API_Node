@@ -2,7 +2,9 @@ const cors = require("cors");
 const express = require("express");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const swaggerUi = require("swagger-ui-express");
 const routes = require("./modules/routes");
+const swaggerSpec = require("./swagger");
 const ApiError = require("../utils/apiError");
 
 const app = express();
@@ -15,6 +17,28 @@ app.use(express.json({ limit: "1mb" }));
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
+
+app.get("/docs.json", (req, res) => {
+  res.status(200).json(swaggerSpec);
+});
+
+app.use(
+  "/docs",
+  (req, res, next) => {
+    res.setHeader(
+      "Content-Security-Policy",
+      "default-src 'self'; img-src 'self' data: https:; style-src 'self' https: 'unsafe-inline'; script-src 'self' 'unsafe-inline';"
+    );
+    next();
+  },
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    swaggerOptions: {
+      persistAuthorization: true
+    }
+  })
+);
 
 app.use("/", routes);
 

@@ -4,6 +4,16 @@ const ApiError = require("../../../utils/apiError");
 
 let cachedHasItemsOrderIdColumn = null;
 
+function firstDefined(...values) {
+  for (const value of values) {
+    if (value !== undefined && value !== null) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
 function assertOrderAccessRole(user) {
   const role = user && user.role;
   if (role !== "user" && role !== "admin") {
@@ -34,8 +44,13 @@ function normalizeItems(items) {
   const grouped = new Map();
 
   for (const item of items) {
-    const productId = Number(item.product_id);
-    const quantity = Number.parseInt(item.quantity, 10);
+    const productId = Number(
+      firstDefined(item.product_id, item.idItem, item.id_item)
+    );
+    const quantity = Number.parseInt(
+      firstDefined(item.quantity, item.quantidadeItem, item.quantidade_item),
+      10
+    );
 
     if (!Number.isInteger(productId) || !Number.isInteger(quantity) || quantity <= 0) {
       continue;
@@ -54,13 +69,25 @@ function normalizeItems(items) {
 function mapOrderJsonToDb(payload, authenticatedUserId) {
   const orderSource =
     payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
-  const orderId = String(orderSource.order_id || "").trim();
+  const orderId = String(
+    firstDefined(orderSource.order_id, orderSource.numeroPedido, orderSource.numero_pedido, "")
+  ).trim();
+  const orderValue = firstDefined(
+    orderSource.value,
+    orderSource.valorTotal,
+    orderSource.valor_total
+  );
+  const orderCreationDate = firstDefined(
+    orderSource.CreationDate,
+    orderSource.dataCriacao,
+    orderSource.data_criacao
+  );
 
   const order = {
     user_id: authenticatedUserId,
     order_id: orderId || crypto.randomUUID(),
-    value: parseMoney(orderSource.value),
-    CreationDate: parseDate(orderSource.CreationDate)
+    value: parseMoney(orderValue),
+    CreationDate: parseDate(orderCreationDate)
   };
 
   return {
@@ -167,7 +194,7 @@ async function createOrder(user, payload) {
     const productIds = items.map((item) => item.product_id);
     const usesOrderScopedItems = await hasItemsOrderIdColumn(trx);
     const productQuery = trx("items")
-      .select("product_id", "quantity", "price")
+      .select("product_id", "price")
       .whereIn("product_id", productIds);
 
     if (usesOrderScopedItems) {
@@ -215,18 +242,6 @@ async function createOrder(user, payload) {
         order_id: order.order_id,
         product_id: item.product_id,
         quantity: item.quantity
-      });
-
-      const product = productsById.get(item.product_id);
-      const updateQuery = trx("items").where({ product_id: item.product_id });
-
-      if (usesOrderScopedItems) {
-        updateQuery.andWhere({ order_id: 0 });
-      }
-
-      await updateQuery.update({
-        quantity: Number(product.quantity) - item.quantity,
-        updated_at: trx.fn.now()
       });
     }
 

@@ -9,7 +9,7 @@ const router = express.Router();
  *   post:
  *     tags:
  *       - Auth
- *     summary: Register a new user
+ *     summary: Registrar um novo usuário
  *     requestBody:
  *       required: true
  *       content:

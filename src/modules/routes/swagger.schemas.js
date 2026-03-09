@@ -80,9 +80,7 @@
  *           $ref: '#/components/schemas/User'
  *     CreateOrderItem:
  *       type: object
- *       required:
- *         - product_id
- *         - quantity
+ *       description: Aceita formato interno (product_id/quantity) ou integracao externa (idItem/quantidadeItem)
  *       properties:
  *         product_id:
  *           type: integer
@@ -90,6 +88,23 @@
  *         quantity:
  *           type: integer
  *           example: 2
+ *         idItem:
+ *           type: string
+ *           example: "2434"
+ *         quantidadeItem:
+ *           type: integer
+ *           example: 1
+ *         valorItem:
+ *           type: number
+ *           format: float
+ *           example: 1000
+ *       oneOf:
+ *         - required:
+ *             - product_id
+ *             - quantity
+ *         - required:
+ *             - idItem
+ *             - quantidadeItem
  *     CreateOrderRequest:
  *       type: object
  *       required:
@@ -106,6 +121,17 @@
  *           type: string
  *           format: date-time
  *           example: 2026-03-09T12:00:00.000Z
+ *         numeroPedido:
+ *           type: string
+ *           example: v10089015vdb-01
+ *         valorTotal:
+ *           type: number
+ *           format: float
+ *           example: 10000
+ *         dataCriacao:
+ *           type: string
+ *           format: date-time
+ *           example: 2023-07-19T12:24:11.5299601+00:00
  *         items:
  *           type: array
  *           items:
