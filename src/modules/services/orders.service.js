@@ -4,6 +4,13 @@ const ApiError = require("../../../utils/apiError");
 
 let cachedHasItemsOrderIdColumn = null;
 
+function assertOrderAccessRole(user) {
+  const role = user && user.role;
+  if (role !== "user" && role !== "admin") {
+    throw new ApiError(403, "Acesso proibido.");
+  }
+}
+
 function parseMoney(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -117,33 +124,43 @@ async function fetchOrderRows(baseQuery, executor = db) {
     .orderBy("items_sale.product_id", "asc");
 }
 
-async function listMyOrders(userId) {
-  const rows = await fetchOrderRows(db("sales").where("sales.user_id", userId));
+async function listOrders(user) {
+  assertOrderAccessRole(user);
+
+  const baseQuery = db("sales");
+  if (user.role !== "admin") {
+    baseQuery.where("sales.user_id", user.id);
+  }
+
+  const rows = await fetchOrderRows(baseQuery);
   return groupOrderRows(rows);
 }
 
 async function getOrderById(user, orderId) {
-  const query = db("sales").where("sales.order_id", String(orderId));
+  assertOrderAccessRole(user);
 
-  if (user.role !== "admin") {
-    query.andWhere("sales.user_id", user.id);
-  }
-
-  const rows = await fetchOrderRows(query);
+  const rows = await fetchOrderRows(db("sales").where("sales.order_id", String(orderId)));
   const grouped = groupOrderRows(rows);
 
   if (!grouped.length) {
     throw new ApiError(404, "Pedido não encontrado.");
   }
 
-  return grouped[0];
+  const order = grouped[0];
+  if (user.role !== "admin" && Number(order.user_id) !== Number(user.id)) {
+    throw new ApiError(403, "Acesso proibido.");
+  }
+
+  return order;
 }
 
-async function createOrder(userId, payload) {
-  const { order, items } = mapOrderJsonToDb(payload, userId);
+async function createOrder(user, payload) {
+  assertOrderAccessRole(user);
+
+  const { order, items } = mapOrderJsonToDb(payload, user.id);
 
   if (!Array.isArray(items) || items.length === 0) {
-    throw new ApiError(400, "o pedido deve incluir pelo menos um item válido.");
+    throw new ApiError(400, "O pedido deve incluir pelo menos um item válido.");
   }
 
   return db.transaction(async (trx) => {
@@ -184,8 +201,6 @@ async function createOrder(userId, payload) {
       user_id: order.user_id
     };
 
-
-
     try {
       await trx("sales").insert(salesInsert);
     } catch (error) {
@@ -225,7 +240,7 @@ async function createOrder(userId, payload) {
 }
 
 module.exports = {
-  listMyOrders,
+  listOrders,
   getOrderById,
   createOrder,
   mapOrderJsonToDb

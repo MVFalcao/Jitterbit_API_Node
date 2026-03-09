@@ -11,10 +11,12 @@ const router = express.Router();
  *   get:
  *     tags:
  *       - Products
- *     summary: lista todos os produtos disponíveis
+ *     summary: Lista todos os produtos disponíveis
  *     responses:
  *       200:
  *         description: Lista de produtos
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get("/", productsController.list);
 
@@ -24,7 +26,7 @@ router.get("/", productsController.list);
  *   get:
  *     tags:
  *       - Products
- *     summary: Get produto por ID
+ *     summary: Retorna produto por ID
  *     parameters:
  *       - in: path
  *         name: id
@@ -36,8 +38,8 @@ router.get("/", productsController.list);
  *         description: Dados do produto
  *       404:
  *         description: Produto não encontrado
- *      500:
- *        description: Erro interno do servidor
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get("/:id", productsController.getById);
 
@@ -47,7 +49,7 @@ router.get("/:id", productsController.getById);
  *   post:
  *     tags:
  *       - Products
- *     summary: Cria um produto (apenas admins)
+ *     summary: Cria um produto (apenas admin)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -59,12 +61,14 @@ router.get("/:id", productsController.getById);
  *     responses:
  *       201:
  *         description: Produto criado
- *       403:
- *         description: Acesso proibido (apenas admins podem criar produtos)
- *      400:
+ *       400:
  *         description: Dados inválidos
- *      500:
- *        description: Erro interno do servidor
+ *       401:
+ *         description: token de acesso inválido ou expirado
+ *       403:
+ *         description: Acesso proibido (apenas admin)
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.post("/", authMiddleware, roleMiddleware("admin"), productsController.create);
 
@@ -74,7 +78,7 @@ router.post("/", authMiddleware, roleMiddleware("admin"), productsController.cre
  *   put:
  *     tags:
  *       - Products
- *     summary: atualizar produto (admin only)
+ *     summary: Atualiza um produto (apenas admin)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -92,14 +96,16 @@ router.post("/", authMiddleware, roleMiddleware("admin"), productsController.cre
  *     responses:
  *       200:
  *         description: Produto atualizado
+ *       400:
+ *         description: Dados inválidos
+ *       401:
+ *         description: token de acesso inválido ou expirado
  *       403:
- *         description: Acesso proibido (apenas admins podem atualizar produtos)
+ *         description: Acesso proibido (apenas admin)
  *       404:
  *         description: Produto não encontrado
- *      400:
- *         description: Dados inválidos
- *      500:
- *        description: Erro interno do servidor
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.put("/:id", authMiddleware, roleMiddleware("admin"), productsController.update);
 
@@ -109,7 +115,7 @@ router.put("/:id", authMiddleware, roleMiddleware("admin"), productsController.u
  *   delete:
  *     tags:
  *       - Products
- *     summary: produto deletado (admin only)
+ *     summary: Exclui um produto (apenas admin)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -121,12 +127,14 @@ router.put("/:id", authMiddleware, roleMiddleware("admin"), productsController.u
  *     responses:
  *       204:
  *         description: Produto excluído com sucesso
+ *       401:
+ *         description: token de acesso inválido ou expirado
  *       403:
- *         description: Acesso proibido (apenas admins podem excluir produtos)
- *      404:
- *        description: Produto não encontrado
- *     500:
- *       description: Erro interno do servidor
+ *         description: Acesso proibido (apenas admin)
+ *       404:
+ *         description: Produto não encontrado
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.delete("/:id", authMiddleware, roleMiddleware("admin"), productsController.remove);
 

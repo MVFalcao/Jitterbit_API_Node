@@ -1,6 +1,5 @@
 const express = require("express");
 const authMiddleware = require("../../../middlewares/authMiddleware");
-const roleMiddleware = require("../../../middlewares/roleMiddleware");
 const validateCreateOrder = require("../../../middlewares/validateCreateOrder");
 const ordersController = require("../controllers/orders.controller");
 
@@ -12,16 +11,18 @@ const router = express.Router();
  *   get:
  *     tags:
  *       - Orders
- *     summary: Lista de pedidos do usuário autenticado (cliente) ou todos os pedidos (admin)
+ *     summary: Lista pedidos do usuário autenticado; admin visualiza todos
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de pedidos
-*        403:
-*          description: Acesso proibido (apenas clientes veem seus pedidos, admins veem todos)
-*        500:
-*          description: Erro interno do servidor
+ *       401:
+ *         description: token de acesso inválido ou expirado
+ *       403:
+ *         description: Acesso proibido para o papel atual
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get("/list", authMiddleware, ordersController.listMyOrders);
 
@@ -31,7 +32,7 @@ router.get("/list", authMiddleware, ordersController.listMyOrders);
  *   get:
  *     tags:
  *       - Orders
- *     summary: pega um pedido por ID (usuario autenticado ou admin)
+ *     summary: Retorna um pedido por ID (dono ou admin)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -43,10 +44,12 @@ router.get("/list", authMiddleware, ordersController.listMyOrders);
  *     responses:
  *       200:
  *         description: Dados do pedido
+ *       401:
+ *         description: token de acesso inválido ou expirado
+ *       403:
+ *         description: Acesso proibido para visualizar o pedido
  *       404:
  *         description: Pedido não encontrado
- *       403:
- *         description: Acesso proibido (clientes só podem acessar seus próprios pedidos)
  *       500:
  *         description: Erro interno do servidor
  */
@@ -58,7 +61,7 @@ router.get("/:id", authMiddleware, ordersController.getOrderById);
  *   post:
  *     tags:
  *       - Orders
- *     summary: Cria um novo pedido para o usuário autenticado (cliente) ou admin
+ *     summary: Cria um novo pedido (usuário ou admin)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -69,11 +72,15 @@ router.get("/:id", authMiddleware, ordersController.getOrderById);
  *             $ref: '#/components/schemas/CreateOrderRequest'
  *     responses:
  *       201:
- *         description: o pedido foi criado com sucesso
+ *         description: Pedido criado com sucesso
  *       400:
- *         description: dados do pedido inválidos, por favor verifique os campos
+ *         description: Dados do pedido inválidos
+ *       401:
+ *         description: token de acesso inválido ou expirado
  *       403:
- *         description: Acesso proibido (apenas clientes e admins podem criar pedidos)
+ *         description: Acesso proibido para o papel atual
+ *       409:
+ *         description: order_id já existe
  *       500:
  *         description: Erro interno do servidor
  */

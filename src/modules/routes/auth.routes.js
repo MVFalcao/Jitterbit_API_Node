@@ -24,11 +24,11 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/TokenResponse'
  *       400:
- *         description: dados invalidos, porfavor verifique os campos
+ *         description: dados inválidos, por favor verifique os campos
  *       409:
  *         description: Email já registrado
- *      500:
- *          description: Erro interno do servidor
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.post("/register", authController.register);
 
@@ -52,9 +52,11 @@ router.post("/register", authController.register);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: email e senha são necessários
  *       401:
  *         description: credenciais inválidas
- *      500:
+ *       500:
  *         description: Erro interno do servidor
  */
 router.post("/login", authController.login);
@@ -79,8 +81,12 @@ router.post("/login", authController.login);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: token de atualização obrigatório
  *       401:
- *         description: Invalid or expired refresh token
+ *         description: refresh token inválido ou expirado
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.post("/refresh", authController.refresh);
 
@@ -100,10 +106,10 @@ router.post("/refresh", authController.refresh);
  *     responses:
  *       204:
  *         description: deslogado com sucesso
- *       401:
- *         description: Invalid or expired refresh token
- *      500:
- *        description: Erro interno do servidor
+ *       400:
+ *         description: token de atualização obrigatório
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.post("/logout", authController.logout);
 
