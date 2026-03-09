@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
 const ApiError = require("./apiError");
 
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "change_me";
-const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || "30m";
+const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET ;
+const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN ;
 
 function signAccessToken(user) {
   return jwt.sign(
