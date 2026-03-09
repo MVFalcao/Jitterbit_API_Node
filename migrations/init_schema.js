@@ -7,7 +7,25 @@ exports.up = async function up(knex) {
     table.string("role").notNullable().defaultTo("user");
     table.timestamps(true, true);
   });
+
+  await knex.schema.createTable("refresh_tokens", (table) => {
+    table.string("id").primary();
+    table
+      .integer("user_id")
+      .unsigned()
+      .notNullable()
+      .references("id")
+      .inTable("users")
+      .onDelete("CASCADE");
+    table.string("token_hash").notNullable().unique();
+    table.dateTime("expires_at").notNullable();
+    table.dateTime("revoked_at").nullable();
+    table.timestamps(true, true);
+  });
 };
+
+
 exports.down = async function down(knex) {
   await knex.schema.dropTableIfExists("users");
+  await knex.schema.dropTableIfExists("refresh_tokens");
 };
