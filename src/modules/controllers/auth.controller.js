@@ -36,9 +36,14 @@ async function logout(req, res, next) {
   }
 }
 
+async function me(req, res) {
+  res.status(200).json({ user: req.user });
+}
+
 module.exports = {
   register,
   login,
   refresh,
-  logout
+  logout,
+  me
 };
